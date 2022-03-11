@@ -9,9 +9,6 @@ import UIKit
 
 class ViewController: UIViewController {
 
-var fetchedNome = [Repositorio]()
-
-
 override func viewDidLoad() {
 super.viewDidLoad()
 
@@ -19,8 +16,6 @@ parseData()
 }
 
 func parseData(){
-
-fetchedNome = [Repositorio]()
 
 let url = "https://api.github.com/search/repositories?q=language:swift&sort=stars"
 var request = URLRequest(url: URL(string: url)!)
@@ -32,38 +27,46 @@ let session = URLSession(configuration: configuration, delegate: nil, delegateQu
 let task = session.dataTask(with: request) { (data ,response , error) in
 
 if (error != nil) {
-    print("Error")
+print("Error")
 } else {
+
+do {
+let fetchedData = try JSONSerialization.jsonObject(with: data!, options: .mutableLeaves)
+
+if let fetchedData = fetchedData as? Dictionary<String, AnyObject>, let repo = fetchedData["items"] as? [Any] {
     
-    do {
-        let fetchedData = try JSONSerialization.jsonObject(with: data!, options: .mutableLeaves)
+        for eachFetchedRepositorio in repo {
+            
+            //pegando o owner
+            if let eachFetchedRepositorio = eachFetchedRepositorio as? AnyObject, let owner = eachFetchedRepositorio["owner"] as? NSDictionary {
+    
+                let nome_owner = owner["login"] as! String
+                let foto_owner = owner["avatar_url"] as! String
+                print(nome_owner)
+                print(foto_owner)
+                
+            }
         
-        if let fetchedData = fetchedData as? Dictionary<String, AnyObject>, let repo = fetchedData["items"] as? [Any] {
+            //fim do owner
             
-                for eachFetchedRepositorio in repo {
-                let eachRepositorio = eachFetchedRepositorio as! [String : Any]
-                    
-                    //pegando o owner
-                    
-                    //fim do owner
-        
-                    
-                    
-                    let nome_autor = eachRepositorio["name"] as! String
-                    let qntd_estrelas = eachRepositorio["stargazers_count"] as! Int
-                    
-                    print(nome_autor)
-                    print(qntd_estrelas)
-                }
+        let eachRepositorio = eachFetchedRepositorio as! [String : Any]
             
+        let nome_repo = eachRepositorio["name"] as! String
+        let qntd_estrelas = eachRepositorio["stargazers_count"] as! Int
             
+            print(nome_repo)
+            print(qntd_estrelas)
+            print(" ")
         }
     
+    
+}
+
 //            print(fetchedData)
-        
-    } catch {
-        print("Error 2")
-    }
+
+} catch {
+print("Error 2")
+}
 }
 
 }

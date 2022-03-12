@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
 @IBOutlet weak var repoTableView: UITableView!
 
@@ -17,34 +17,49 @@ override func viewDidLoad() {
 super.viewDidLoad()
 
 repoTableView.dataSource = self
+repoTableView.tableFooterView = UIView()
+    
+    // initializing the refreshControl
+    repoTableView.refreshControl = UIRefreshControl()
+    // add target to UIRefreshControl
+    repoTableView.refreshControl?.addTarget(self, action: #selector(callPullToRefresh), for: .valueChanged)
 
 parseData()
+    
+    
+    
 }
 
 override var prefersStatusBarHidden: Bool {
-    return true
+return true
 }
 
+
+
 func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return fetchedRepo.count
+return fetchedRepo.count
 }
 
 func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    
-    let cell = repoTableView.dequeueReusableCell(withIdentifier: "cell") as! RepositorioTableViewCell
-    
-//    cell?.textLabel?.text = fetchedRepo[indexPath.row].login
-    
-    let repositorio = fetchedRepo[indexPath.row]
-    
-    cell.nome_autor?.text = repositorio.login
-    cell.nome_repositorio?.text = repositorio.name
-    cell.quantidade_estrelas?.text = NumberFormatter().string(from: NSNumber(value: repositorio.stargazers_count))
-    cell.foto_autor.loadFrom(URLAddress: repositorio.avatar_url)
-    
-    return cell
-    
+
+let cell = repoTableView.dequeueReusableCell(withIdentifier: "cell") as! RepositorioTableViewCell
+
+let repositorio = fetchedRepo[indexPath.row]
+
+cell.nome_autor?.text = repositorio.login
+cell.nome_repositorio?.text = repositorio.name
+cell.quantidade_estrelas?.text = NumberFormatter().string(from: NSNumber(value: repositorio.stargazers_count))
+cell.foto_autor.loadFrom(URLAddress: repositorio.avatar_url)
+
+return cell
+
 }
+public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let lastIndex = self.fetchedRepo.count - 1
+        if indexPath.row == lastIndex {
+            print("oieee")
+        }
+    }
 
 func parseData(){
 
@@ -98,12 +113,20 @@ self.repoTableView.reloadData()
 } catch {
 print("Error 2")
 }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3){
+                   self.repoTableView.refreshControl?.endRefreshing()
+                   self.repoTableView.reloadData()
+               }
 }
 
 }
 
 task.resume()
 }
+    
+    @objc func callPullToRefresh(){
+            self.parseData()
+        }
 
 
 }
@@ -139,17 +162,17 @@ class RepositorioTableViewCell: UITableViewCell {
 
 
 extension UIImageView {
-    func loadFrom(URLAddress: String) {
-        guard let url = URL(string: URLAddress) else {
-            return
-        }
-        
-        DispatchQueue.main.async { [weak self] in
-            if let imageData = try? Data(contentsOf: url) {
-                if let loadedImage = UIImage(data: imageData) {
-                        self?.image = loadedImage
-                }
-            }
+func loadFrom(URLAddress: String) {
+guard let url = URL(string: URLAddress) else {
+    return
+}
+
+DispatchQueue.main.async { [weak self] in
+    if let imageData = try? Data(contentsOf: url) {
+        if let loadedImage = UIImage(data: imageData) {
+                self?.image = loadedImage
         }
     }
+}
+}
 }

@@ -12,7 +12,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
 @IBOutlet weak var repoTableView: UITableView!
 
 var fetchedRepo = [Repositorio]()
-
+    
 override func viewDidLoad() {
 super.viewDidLoad()
 
@@ -38,6 +38,7 @@ return true
 }
 
 func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+    
     if searchText == ""{
         parseData()
     } else {
@@ -53,11 +54,13 @@ func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
     repoTableView.reloadData()
 }
 
+
 func searchBar(){
     let searchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 50))
     searchBar.delegate = self
     searchBar.showsScopeBar = true
     searchBar.tintColor = UIColor.lightGray
+    searchBar.placeholder = "Search Repo"
     self.repoTableView.tableHeaderView = searchBar
 }
 
@@ -151,7 +154,6 @@ task.resume()
     }
 
 @objc func dismissKeyboard() {
-    //Causes the view (or one of its embedded text fields) to resign the first responder status.
     view.endEditing(true)
 }
 
@@ -203,3 +205,4 @@ if let imageData = try? Data(contentsOf: url) {
 }
 }
 }
+

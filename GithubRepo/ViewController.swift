@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
 
 @IBOutlet weak var repoTableView: UITableView!
 
@@ -18,20 +18,47 @@ super.viewDidLoad()
 
 repoTableView.dataSource = self
 repoTableView.tableFooterView = UIView()
-    
-    // initializing the refreshControl
-    repoTableView.refreshControl = UIRefreshControl()
-    // add target to UIRefreshControl
-    repoTableView.refreshControl?.addTarget(self, action: #selector(callPullToRefresh), for: .valueChanged)
+
+let tap = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
+view.addGestureRecognizer(tap)
+
+// initializing the refreshControl
+repoTableView.refreshControl = UIRefreshControl()
+// add target to UIRefreshControl
+repoTableView.refreshControl?.addTarget(self, action: #selector(callPullToRefresh), for: .valueChanged)
 
 parseData()
-    
-    
-    
+searchBar()
+
 }
+
 
 override var prefersStatusBarHidden: Bool {
 return true
+}
+
+func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+    if searchText == ""{
+        parseData()
+    } else {
+        if searchBar.selectedScopeButtonIndex == 0 {
+            
+            fetchedRepo = fetchedRepo.filter({ (repositorio) in
+                return repositorio.name.lowercased().contains(searchText.lowercased())
+            })
+        }
+
+        repoTableView.reloadData()
+    };
+    repoTableView.reloadData()
+}
+
+func searchBar(){
+    let searchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 50))
+    searchBar.delegate = self
+    searchBar.showsScopeBar = true
+    searchBar.tintColor = UIColor.lightGray
+    self.repoTableView.tableHeaderView = searchBar
 }
 
 
@@ -46,6 +73,7 @@ let cell = repoTableView.dequeueReusableCell(withIdentifier: "cell") as! Reposit
 
 let repositorio = fetchedRepo[indexPath.row]
 
+
 cell.nome_autor?.text = repositorio.login
 cell.nome_repositorio?.text = repositorio.name
 cell.quantidade_estrelas?.text = NumberFormatter().string(from: NSNumber(value: repositorio.stargazers_count))
@@ -54,12 +82,6 @@ cell.foto_autor.loadFrom(URLAddress: repositorio.avatar_url)
 return cell
 
 }
-public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        let lastIndex = self.fetchedRepo.count - 1
-        if indexPath.row == lastIndex {
-            print("oieee")
-        }
-    }
 
 func parseData(){
 
@@ -113,20 +135,25 @@ self.repoTableView.reloadData()
 } catch {
 print("Error 2")
 }
-    DispatchQueue.main.asyncAfter(deadline: .now() + 3){
-                   self.repoTableView.refreshControl?.endRefreshing()
-                   self.repoTableView.reloadData()
-               }
+DispatchQueue.main.asyncAfter(deadline: .now() + 3){
+               self.repoTableView.refreshControl?.endRefreshing()
+               self.repoTableView.reloadData()
+           }
 }
 
 }
 
 task.resume()
 }
-    
-    @objc func callPullToRefresh(){
-            self.parseData()
-        }
+
+@objc func callPullToRefresh(){
+        self.parseData()
+    }
+
+@objc func dismissKeyboard() {
+    //Causes the view (or one of its embedded text fields) to resign the first responder status.
+    view.endEditing(true)
+}
 
 
 }
@@ -164,15 +191,15 @@ class RepositorioTableViewCell: UITableViewCell {
 extension UIImageView {
 func loadFrom(URLAddress: String) {
 guard let url = URL(string: URLAddress) else {
-    return
+return
 }
 
 DispatchQueue.main.async { [weak self] in
-    if let imageData = try? Data(contentsOf: url) {
-        if let loadedImage = UIImage(data: imageData) {
-                self?.image = loadedImage
-        }
+if let imageData = try? Data(contentsOf: url) {
+    if let loadedImage = UIImage(data: imageData) {
+            self?.image = loadedImage
     }
+}
 }
 }
 }
